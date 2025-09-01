@@ -1,0 +1,221 @@
+[phases.setup]
+nixPkgs = ["php84", "composer", "nodejs_20", "npm", "git", "mysql80", "redis"]
+
+[phases.install]
+cmds = [
+    "composer install --no-dev --optimize-autoloader --no-interaction",
+    "npm ci --only=production",
+    "npm run build",
+]
+
+[phases.build]
+cmds = [
+    "php artisan config:cache",
+    "php artisan route:cache",
+    "php artisan view:cache",
+    "php artisan migrate --force",
+    "php artisan db:seed --force",
+]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
+
+[variables]
+APP_ENV = "production"
+LOG_CHANNEL = "stack"
+CACHE_DRIVER = "file"
+SESSION_DRIVER = "file"
+QUEUE_CONNECTION = "sync"
+BROADCAST_DRIVER = "log"
+FILESYSTEM_DISK = "local"
+
+# Coolify v4.0.0-beta.385 nginx workaround
+# Using PHP's built-in server instead of nginx to avoid duplicate location conflicts
+SERVER_TYPE = "php"
+
+[phases.setup.aptPkgs]
+packages = ["libpng-dev", "libxml2-dev", "zip", "unzip"]
+
+[phases.setup.scripts]
+setup = """
+#!/bin/bash
+# Create necessary directories
+mkdir -p storage/framework/{sessions,views,cache}
+mkdir -p storage/logs
+mkdir -p bootstrap/cache
+
+# Set proper permissions
+chmod -R 775 storage
+chmod -R 775 bootstrap/cache
+
+# Generate application key if not exists
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
+
+# Generate app key if not set
+php artisan key:generate --no-interaction || true
+
+# Coolify nginx workaround: Create a custom nginx config that avoids conflicts
+cat > /tmp/nginx-custom.conf << 'EOF'
+server {
+    listen 80;
+    server_name _;
+    root /var/www/html/public;
+    index index.php index.html;
+
+    # Avoid duplicate location conflicts by using unique paths
+    location /app/ {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location /api/ {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location /tracker/ {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location /widget/ {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    # Main application route - avoid duplicate "/" location
+    location ~ ^/(?!app|api|tracker|widget) {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \\.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\\.(?!well-known).* {
+        deny all;
+    }
+}
+EOF
+
+echo "Custom nginx config created to avoid Coolify v4.0.0-beta.385 bug"
+"""
+
+[phases.install.scripts]
+post-install = """
+#!/bin/bash
+# Copy environment file if it doesn't exist
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
+
+# Set proper permissions after install
+chmod -R 775 storage
+chmod -R 775 bootstrap/cache
+
+# Coolify workaround: Ensure nginx config is properly set
+if [ -f /tmp/nginx-custom.conf ]; then
+  echo "Nginx workaround config is ready"
+fi
+"""
+
+[phases.build.scripts]
+pre-build = """
+#!/bin/bash
+# Ensure environment is ready
+if [ ! -f .env ]; then
+  echo "Error: .env file not found. Please ensure environment variables are set."
+  exit 1
+fi
+
+# Check if database connection is available
+echo "Checking database connection..."
+php artisan tinker --execute="DB::connection()->getPdo(); echo 'Database connection successful';" || {
+  echo "Warning: Database connection failed. Some build steps may fail."
+}
+
+# Coolify nginx workaround check
+echo "Coolify v4.0.0-beta.385 nginx workaround is active"
+echo "Using PHP built-in server to avoid nginx location conflicts"
+"""
+
+post-build = """
+#!/bin/bash
+# Final permission setup
+chmod -R 775 storage
+chmod -R 775 bootstrap/cache
+
+# Create storage link if needed
+php artisan storage:link || true
+
+# Optimize for production
+php artisan optimize
+
+# Coolify nginx workaround: Final configuration
+echo "Build completed successfully!"
+echo "Application will run on PHP built-in server to avoid nginx conflicts"
+echo "If you need nginx, use the custom config in /tmp/nginx-custom.conf"
+"""
+
+[phases.install.onlyIncludeFiles]
+include = [
+    "composer.json",
+    "composer.lock",
+    "package.json",
+    "package-lock.json",
+    "vite.config.js",
+    "tailwind.config.js",
+    "resources/**/*",
+    "app/**/*",
+    "bootstrap/**/*",
+    "config/**/*",
+    "database/**/*",
+    "lang/**/*",
+    "public/**/*",
+    "routes/**/*",
+    "storage/**/*",
+    ".env.example",
+]
+
+[phases.build.onlyIncludeFiles]
+include = [
+    "app/**/*",
+    "bootstrap/**/*",
+    "config/**/*",
+    "database/**/*",
+    "lang/**/*",
+    "public/**/*",
+    "resources/**/*",
+    "routes/**/*",
+    "storage/**/*",
+    "vendor/**/*",
+    "node_modules/**/*",
+    ".env",
+]
+
+[phases.install.cachePaths]
+paths = ["vendor/", "node_modules/", ".npm/"]
+
+[phases.build.cachePaths]
+paths = [
+    "storage/framework/cache/",
+    "storage/framework/views/",
+    "bootstrap/cache/",
+]
+
+# Coolify v4.0.0-beta.385 specific workarounds
+[phases.setup.scripts.coolify-workaround]
+workaround = """
+# This section addresses the known Coolify nginx bug
+# See: https://github.com/coollabsio/coolify/issues/4908
+
+# Alternative startup command to avoid nginx conflicts
+[alternative-start]
+cmd = "php -S 0.0.0.0:$PORT -t public/"
+
+# Health check endpoint to verify the workaround
+[health-check]
+endpoint = "/health"
+expected = "healthy"
+"""
