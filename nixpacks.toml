@@ -4,7 +4,6 @@ nixPkgs = ["...", "python311Packages.supervisor"]
 [phases.install]
 cmds = [
     "mkdir -p /var/log/nginx && mkdir -p /var/cache/nginx",
-    "mkdir -p mkdir -p /app/bootstrap/cache",
     "touch /app/database/database.sqlite",
     "chmod -R 775 /app/storage && chmod -R 775 /app/bootstrap/cache",
     "chown -R www-data:www-data /app/storage && chown -R www-data:www-data /app/bootstrap/cache",
