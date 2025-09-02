@@ -1,6 +1,7 @@
 [phases.setup]
 cmds = [
     "...",
+    "mkdir -p /app/bootstrap/cache",
     "chmod -R 777 /app/bootstrap/cache",
     "chown -R www-data:www-data /app/bootstrap/cache",
 ]
