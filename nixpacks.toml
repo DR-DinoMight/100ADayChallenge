@@ -1,5 +1,13 @@
 [phases.setup]
-cmds = ["..."]
+cmds = [
+    "mkdir -p /app/framework/{sessions,views,cache}",
+    "chmod -R 775 /app/framework",
+    "chown -R www-data:www-data /app/framework",
+    "mkdir -p /app/bootstrap/cache",
+    "chmod -R 775 /app/bootstrap/cache",
+    "chown -R www-data:www-data /app/bootstrap/cache",
+    "...",
+]
 nixPkgs = ["...", "python311Packages.supervisor"]
 
 [phases.build]
