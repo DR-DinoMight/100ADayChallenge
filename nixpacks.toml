@@ -1,25 +1,13 @@
 [phases.setup]
 nixPkgs = ["...", "python311Packages.supervisor"]
 
-[phases.install]
-cmds = [
-    "mkdir -p /var/log/nginx && mkdir -p /var/cache/nginx",
-    "mkdir -p /app/bootstrap/cache",
-    "chown -R root:root /app/bootstrap/cache",
-    "chmod -R 777 /app/bootstrap/cache",
-    "composer install --no-dev --ignore-platform-reqs",
-    "php artisan optimize:clear",
-    "npm ci",
-
-]
-
 [phases.build]
 cmds = [
     "mkdir -p /etc/supervisor/conf.d/",
     "cp /assets/worker-*.conf /etc/supervisor/conf.d/",
     "cp /assets/supervisord.conf /etc/supervisord.conf",
     "chmod +x /assets/start.sh",
-    "...",
+    "..."
 ]
 
 [start]
@@ -138,7 +126,6 @@ http {
     tcp_nopush   on;
     server_names_hash_bucket_size 128; # this seems to be required for some vhosts
 
-
     server {
         listen ${PORT};
         listen [::]:${PORT};
@@ -153,11 +140,11 @@ http {
         add_header X-Content-Type-Options "nosniff";
 
         client_max_body_size 35M;
-
+     
         index index.php;
-
+     
         charset utf-8;
-
+     
 
         $if(NIXPACKS_PHP_FALLBACK_PATH) (
             location / {
@@ -168,22 +155,21 @@ http {
                 try_files $uri $uri/ /index.php?$query_string;
            }
         )
-
+     
         location = /favicon.ico { access_log off; log_not_found off; }
         location = /robots.txt  { access_log off; log_not_found off; }
-
+     
         $if(IS_LARAVEL) (
             error_page 404 /index.php;
         ) else ()
-
+     
         location ~ \.php$ {
             fastcgi_pass 127.0.0.1:9000;
-            fastcgi_buffer_size 8k;
             fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
             include $!{nginx}/conf/fastcgi_params;
             include $!{nginx}/conf/fastcgi.conf;
         }
-
+     
         location ~ /\.(?!well-known).* {
             deny all;
         }
