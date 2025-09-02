@@ -4,9 +4,7 @@ nixPkgs = ["...", "python311Packages.supervisor"]
 [phases.install]
 cmds = [
     "mkdir -p /var/log/nginx && mkdir -p /var/cache/nginx",
-    "rm -rf /app/bootstrap/cache",
-    "mkdir -p /app/bootstrap/cache",
-    "chmod 755 /app/bootstrap/cache",
+    "chmod -r 777 /app/bootstrap/cache",
     "composer install --optimize-autoloader --no-dev --ignore-platform-reqs",
     "php artisan optimize:clear",
     "npm ci",
