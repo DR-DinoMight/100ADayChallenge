@@ -5,6 +5,7 @@ nixPkgs = ["...", "python311Packages.supervisor"]
 cmds = [
     "mkdir -p /var/log/nginx && mkdir -p /var/cache/nginx",
     "ls -la /app/bootstrap",
+    "mkdir -p /app/bootstrap/cache",
     "chmod -R 755 /app/bootstrap",
     "composer install --no-interaction --prefer-dist --optimize-autoloader",
 ]
