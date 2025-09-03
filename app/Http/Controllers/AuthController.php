@@ -25,7 +25,7 @@ class AuthController extends Controller
         $email = $request->email;
 
         // Check if this is the authorized email (you can configure this)
-        $authorizedEmails = config('auth.authorized_emails', ['your-email@example.com']);
+        $authorizedEmails = config('auth.authorized_emails', ['matt@deloughry.co.uk']);
 
         if (!in_array($email, $authorizedEmails)) {
             throw ValidationException::withMessages([
