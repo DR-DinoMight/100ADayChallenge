@@ -9,6 +9,7 @@ cmds = [
     "chmod -R 755 /app/bootstrap",
     "ls -la /app/bootstrap",
     "composer install --no-interaction --prefer-dist --optimize-autoloader",
+    "npm ci",
 ]
 
 [phases.build]
