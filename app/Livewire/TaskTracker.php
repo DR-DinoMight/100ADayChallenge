@@ -388,9 +388,51 @@ class TaskTracker extends Component
         ];
     }
 
+    public function getTimeOfDayChartDataProperty()
+    {
+        if (! $this->selectedTaskTypeId) {
+            return null;
+        }
+
+        $userId = $this->getCurrentUserId();
+        if (! $userId) {
+            return null;
+        }
+
+        // Get last 30 days of task completion times
+        $startDate = now()->subDays(29);
+        $endDate = now();
+
+        $tasks = Task::forUser($userId)
+            ->forTaskType($this->selectedTaskTypeId)
+            ->forDateRange($startDate, $endDate)
+            ->selectRaw('CAST(strftime("%H", created_at) AS INTEGER) as hour, SUM(count) as total')
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get()
+            ->keyBy('hour');
+
+        // Create array for all 24 hours
+        $hourlyData = [];
+        $labels = [];
+
+        for ($i = 0; $i < 24; $i++) {
+            $labels[] = sprintf('%02d:00', $i);
+            $hourlyData[] = $tasks->get($i)->total ?? 0;
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $hourlyData,
+        ];
+    }
+
     public function toggleChartView()
     {
-        $this->chartView = $this->chartView === 'daily' ? 'weekly' : 'daily';
+        $views = ['daily', 'weekly', 'time-of-day'];
+        $currentIndex = array_search($this->chartView, $views);
+        $nextIndex = ($currentIndex + 1) % count($views);
+        $this->chartView = $views[$nextIndex];
         $this->dispatch('chart-view-changed');
     }
 

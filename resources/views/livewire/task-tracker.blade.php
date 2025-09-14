@@ -210,14 +210,16 @@
         </div>
 
         <!-- Charts Section -->
-        @if($this->currentTaskType && $this->chartData)
+        @if($this->currentTaskType)
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
                         @if($chartView === 'daily')
                             Daily Progress (Last 30 Days)
-                        @else
+                        @elseif($chartView === 'weekly')
                             Weekly Progress (Last 12 Weeks)
+                        @else
+                            Time of Day Analysis (Last 30 Days)
                         @endif
                     </h2>
 
@@ -239,15 +241,19 @@
                         >
                             Weekly
                         </button>
+                        <button
+                            wire:click="$set('chartView', 'time-of-day')"
+                            class="px-3 py-1 text-sm rounded-md transition-colors duration-200 {{ $chartView === 'time-of-day'
+                                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}"
+                        >
+                            Time of Day
+                        </button>
                     </div>
                 </div>
 
-                <div class="relative h-64">
-                    @if($chartView === 'daily')
-                        <canvas id="dailyChart" width="400" height="200"></canvas>
-                    @else
-                        <canvas id="weeklyChart" width="400" height="200"></canvas>
-                    @endif
+                <div class="relative h-80">
+                    <canvas id="mainChart" width="400" height="300"></canvas>
                 </div>
             </div>
         @endif
@@ -296,143 +302,133 @@
 
 <script>
 document.addEventListener('livewire:init', function () {
-    let dailyChart = null;
-    let weeklyChart = null;
+    let mainChart = null;
+    const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    function initCharts() {
-        // Destroy existing charts
-        if (dailyChart) dailyChart.destroy();
-        if (weeklyChart) weeklyChart.destroy();
-
-        @if($this->currentTaskType && $this->chartData)
-            @if($chartView === 'daily')
-                // Daily Chart
-                const dailyCtx = document.getElementById('dailyChart');
-                if (dailyCtx) {
-                    dailyChart = new Chart(dailyCtx, {
-                        type: 'line',
-                        data: {
-                            labels: @json($this->chartData['labels']),
-                            datasets: [{
-                                label: 'Daily Count',
-                                data: @json($this->chartData['data']),
-                                borderColor: 'rgb(59, 130, 246)',
-                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.4
-                            }, {
-                                label: 'Daily Goal',
-                                data: Array(30).fill(@json($this->chartData['goal'])),
-                                borderColor: 'rgb(239, 68, 68)',
-                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                borderWidth: 2,
-                                borderDash: [5, 5],
-                                fill: false
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    labels: {
-                                        color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#e5e7eb' : '#374151'
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#9ca3af' : '#6b7280'
-                                    },
-                                    grid: {
-                                        color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#374151' : '#e5e7eb'
-                                    }
-                                },
-                                x: {
-                                    ticks: {
-                                        color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#9ca3af' : '#6b7280'
-                                    },
-                                    grid: {
-                                        color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#374151' : '#e5e7eb'
-                                    }
-                                }
-                            }
-                        }
-                    });
+    // Chart configuration
+    const chartConfig = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: isDarkMode ? '#e5e7eb' : '#374151'
                 }
-            @else
-                // Weekly Chart
-                @if($this->weeklyChartData)
-                    const weeklyCtx = document.getElementById('weeklyChart');
-                    if (weeklyCtx) {
-                        weeklyChart = new Chart(weeklyCtx, {
-                            type: 'bar',
-                            data: {
-                                labels: @json($this->weeklyChartData['labels']),
-                                datasets: [{
-                                    label: 'Weekly Total',
-                                    data: @json($this->weeklyChartData['data']),
-                                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                                    borderColor: 'rgb(16, 185, 129)',
-                                    borderWidth: 1
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        labels: {
-                                            color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#e5e7eb' : '#374151'
-                                        }
-                                    }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#9ca3af' : '#6b7280'
-                                        },
-                                        grid: {
-                                            color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#374151' : '#e5e7eb'
-                                        }
-                                    },
-                                    x: {
-                                        ticks: {
-                                            color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#9ca3af' : '#6b7280'
-                                        },
-                                        grid: {
-                                            color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#374151' : '#e5e7eb'
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                @endif
-            @endif
-        @endif
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: isDarkMode ? '#9ca3af' : '#6b7280'
+                },
+                grid: {
+                    color: isDarkMode ? '#374151' : '#e5e7eb'
+                }
+            },
+            x: {
+                ticks: {
+                    color: isDarkMode ? '#9ca3af' : '#6b7280'
+                },
+                grid: {
+                    color: isDarkMode ? '#374151' : '#e5e7eb'
+                }
+            }
+        }
+    };
+
+    function createChart() {
+        const ctx = document.getElementById('mainChart');
+        if (!ctx) return;
+
+        // Destroy existing chart
+        if (mainChart) {
+            mainChart.destroy();
+        }
+
+        const chartView = @json($chartView);
+        let chartData = null;
+        let chartType = 'line';
+
+        // Get data based on chart view
+        switch (chartView) {
+            case 'daily':
+                chartData = @json($this->chartData);
+                if (chartData) {
+                    chartType = 'line';
+                    chartData = {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: 'Daily Count',
+                            data: chartData.data,
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'Daily Goal',
+                            data: Array(30).fill(chartData.goal),
+                            borderColor: 'rgb(239, 68, 68)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false
+                        }]
+                    };
+                }
+                break;
+
+            case 'weekly':
+                chartData = @json($this->weeklyChartData);
+                if (chartData) {
+                    chartType = 'bar';
+                    chartData = {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: 'Weekly Total',
+                            data: chartData.data,
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            borderColor: 'rgb(16, 185, 129)',
+                            borderWidth: 1
+                        }]
+                    };
+                }
+                break;
+
+            case 'time-of-day':
+                chartData = @json($this->timeOfDayChartData);
+                if (chartData) {
+                    chartType = 'bar';
+                    chartData = {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: 'Tasks Completed',
+                            data: chartData.data,
+                            backgroundColor: 'rgba(168, 85, 247, 0.8)',
+                            borderColor: 'rgb(168, 85, 247)',
+                            borderWidth: 1
+                        }]
+                    };
+                }
+                break;
+        }
+
+        if (chartData) {
+            mainChart = new Chart(ctx, {
+                type: chartType,
+                data: chartData,
+                options: chartConfig
+            });
+        }
     }
 
-    // Initialize charts on page load
-    initCharts();
+    // Initialize chart on page load
+    createChart();
 
-    // Re-initialize charts when Livewire updates
-    Livewire.on('task-added', function () {
-        setTimeout(initCharts, 100);
-    });
-
-    // Re-initialize charts when task type changes
-    Livewire.on('task-type-changed', function () {
-        setTimeout(initCharts, 100);
-    });
-
-    // Re-initialize charts when chart view changes
-    Livewire.on('chart-view-changed', function () {
-        setTimeout(initCharts, 100);
-    });
+    // Re-create chart when Livewire updates
+    Livewire.on('task-added', createChart);
+    Livewire.on('task-type-changed', createChart);
+    Livewire.on('chart-view-changed', createChart);
 });
 </script>
