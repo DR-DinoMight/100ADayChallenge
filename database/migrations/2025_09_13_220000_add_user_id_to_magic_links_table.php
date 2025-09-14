@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('magic_links', function (Blueprint $table) {
-            $table->foreignId('user_id')->after('id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->after('id')->constrained()->onDelete('cascade')->nullable();
             $table->index(['user_id', 'token']);
         });
     }
