@@ -105,20 +105,4 @@ return [
 
     'password_timeout' => 10800,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Authorized Emails for Magic Link Authentication
-    |--------------------------------------------------------------------------
-    |
-    | This array contains the email addresses that are authorized to access
-    | the task tracker via magic link authentication. Only these emails
-    | will be able to request and receive magic links.
-    |
-    */
-
-    'authorized_emails' => [
-        env('AUTHORIZED_EMAIL', 'matt@deloughry.co.uk'), // Set AUTHORIZED_EMAIL in your .env file
-        // Add more authorized emails if needed
-    ],
-
 ];

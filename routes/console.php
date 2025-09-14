@@ -24,3 +24,9 @@ Schedule::command('reminder:daily')
     ->dailyAt('19:00')
     ->description('Send daily reminder emails to log reps')
     ->withoutOverlapping();
+
+// Schedule magic link cleanup every hour
+Schedule::command('magic-links:cleanup')
+    ->hourly()
+    ->description('Clean up expired and blocked magic links')
+    ->withoutOverlapping();

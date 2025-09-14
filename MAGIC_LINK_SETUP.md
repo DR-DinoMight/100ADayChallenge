@@ -4,26 +4,17 @@ This guide explains how to set up the magic link authentication system for your 
 
 ## 🔐 How It Works
 
-The magic link system provides secure, passwordless access to your task tracker:
+The magic link system provides secure, passwordless access to your task tracker for multiple users:
 
 1. **Request Access**: Enter your email on the login page
 2. **Receive Link**: A secure link is sent to your email
 3. **Click to Login**: Click the link to automatically log in
 4. **Secure Session**: Stay logged in for 24 hours
+5. **User Isolation**: Each user's tasks and data are completely separate
 
 ## 🚀 Quick Setup
 
-### 1. Configure Your Email
-
-Add your email address to the `.env` file:
-
-```bash
-AUTHORIZED_EMAIL=your-actual-email@example.com
-```
-
-**Important**: Replace `your-actual-email@example.com` with your real email address.
-
-### 2. Configure Mail Settings
+### 1. Configure Mail Settings
 
 Ensure your mail settings are configured in `.env`:
 
@@ -38,16 +29,17 @@ MAIL_FROM_ADDRESS=your-email@example.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-### 3. Test the System
+### 2. Test the System
 
 1. Visit your application (it will redirect to `/login`)
-2. Enter your authorized email address
+2. Enter any email address
 3. Check your email for the magic link
 4. Click the link to log in
 
 ## 🔒 Security Features
 
-- **Email Verification**: Only authorized emails can request links
+- **Multi-User Support**: Any email address can request a magic link
+- **User Isolation**: Each user's data is completely separate
 - **One-Time Use**: Each link can only be used once
 - **24-Hour Expiry**: Links automatically expire after 24 hours
 - **Session Expiry**: Logged-in sessions expire after 24 hours
@@ -62,18 +54,6 @@ The system sends beautifully formatted emails with:
 - Security warnings
 
 ## 🛠️ Customization
-
-### Adding More Authorized Emails
-
-To allow multiple people access, edit `config/auth.php`:
-
-```php
-'authorized_emails' => [
-    env('AUTHORIZED_EMAIL', 'your-email@example.com'),
-    'another-person@example.com',
-    'team-member@example.com',
-],
-```
 
 ### Changing Link Expiry
 
@@ -92,8 +72,7 @@ Edit `resources/views/emails/magic-link.blade.php` to modify the email template.
 ### Links Not Being Sent
 
 1. Check your mail configuration in `.env`
-2. Verify the email address is in `authorized_emails`
-3. Check your application logs for errors
+2. Check your application logs for errors
 
 ### Can't Log In
 

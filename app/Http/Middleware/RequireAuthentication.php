@@ -17,14 +17,15 @@ class RequireAuthentication
     public function handle(Request $request, Closure $next): Response
     {
         // Check if user is authenticated via magic link
-        if (!Session::get('authenticated')) {
+        if (! Session::get('authenticated') || ! Session::get('user_id')) {
             return redirect()->route('login')->with('error', 'Please log in to access the task tracker.');
         }
 
         // Check if session hasn't expired (24 hours)
         $authenticatedAt = Session::get('authenticated_at');
-        if (!$authenticatedAt || now()->diffInHours($authenticatedAt) > 24) {
-            Session::forget(['authenticated', 'user_email', 'authenticated_at']);
+        if (! $authenticatedAt || now()->diffInHours($authenticatedAt) > 24) {
+            Session::forget(['authenticated', 'user_id', 'user_email', 'user_name', 'authenticated_at']);
+
             return redirect()->route('login')->with('error', 'Your session has expired. Please log in again.');
         }
 
