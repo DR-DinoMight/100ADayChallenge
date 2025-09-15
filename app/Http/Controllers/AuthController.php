@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\MagicLinkMail;
-use App\Models\MagicLink;
 use App\Models\User;
+use App\Models\MagicLink;
+use App\Mail\MagicLinkMail;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 
@@ -78,10 +80,8 @@ class AuthController extends Controller
 
         // Set session with user information
         Session::put('authenticated', true);
-        Session::put('user_id', $magicLink->user->id);
-        Session::put('user_email', $magicLink->user->email);
-        Session::put('user_name', $magicLink->user->name);
         Session::put('authenticated_at', now());
+        Auth::login($magicLink->user);
 
         return redirect()->route('task-tracker')->with('success', 'Welcome back! You are now logged in.');
     }

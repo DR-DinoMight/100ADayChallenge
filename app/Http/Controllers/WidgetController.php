@@ -10,7 +10,7 @@ use Carbon\Carbon;
 
 class WidgetController extends Controller
 {
-    public function show(Request $request)
+    public function show(Request $request, $userId)
     {
         $taskTypeName = $request->get('type', 'push_ups');
         $theme = $request->get('theme', 'light');
@@ -30,10 +30,12 @@ class WidgetController extends Controller
 
         // Get current tallies using the task type ID
         $todayTotal = Task::forTaskType($taskType->id)
+            ->forUser($userId)
             ->forDate(now()->toDateString())
             ->sum('count');
 
         $weekTotal = Task::forTaskType($taskType->id)
+            ->forUser($userId)
             ->forDateRange(
                 now()->subDays(6)->startOfDay(),
                 now()->endOfDay()
@@ -41,6 +43,7 @@ class WidgetController extends Controller
             ->sum('count');
 
         $monthTotal = Task::forTaskType($taskType->id)
+            ->forUser($userId)
             ->forDateRange(
                 now()->subDays(29)->startOfDay(),
                 now()->endOfDay()

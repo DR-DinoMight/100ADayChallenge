@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -17,7 +18,7 @@ class RequireAuthentication
     public function handle(Request $request, Closure $next): Response
     {
         // Check if user is authenticated via magic link
-        if (! Session::get('authenticated') || ! Session::get('user_id')) {
+        if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to access the task tracker.');
         }
 

@@ -3,9 +3,10 @@
 namespace App\Livewire;
 
 use App\Models\Task;
-use App\Models\TaskType;
-use Illuminate\Support\Facades\Session;
 use Livewire\Component;
+use App\Models\TaskType;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class TaskTracker extends Component
 {
@@ -52,7 +53,7 @@ class TaskTracker extends Component
 
     private function getCurrentUserId(): ?int
     {
-        return Session::get('user_id');
+        return Auth::user()->id;
     }
 
     public function addTask()
