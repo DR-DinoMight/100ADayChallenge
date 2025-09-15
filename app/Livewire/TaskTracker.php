@@ -378,7 +378,7 @@ class TaskTracker extends Component
                 ->forDateRange($weekStart, $weekEnd)
                 ->sum('count');
 
-            $labels[] = 'Week '.(now()->diffInWeeks($weekStart) + 1);
+            $labels[] = 'Week ' . (now()->diffInWeeks($weekStart) + 1);
             $data[] = $total;
         }
 

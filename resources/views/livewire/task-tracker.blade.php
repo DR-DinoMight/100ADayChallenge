@@ -254,6 +254,12 @@
 
                 <div class="relative h-80">
                     <canvas id="mainChart" width="400" height="300"></canvas>
+                    <div id="noDataMessage" class="absolute inset-0 items-center justify-center text-gray-500 dark:text-gray-400 hidden">
+                        <div class="text-center">
+                            <div class="text-lg font-medium mb-2">No Data Available</div>
+                            <div class="text-sm">Complete some tasks to see your progress chart</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         @endif
@@ -353,14 +359,14 @@ document.addEventListener('livewire:init', function () {
         // Get data based on chart view
         switch (chartView) {
             case 'daily':
-                chartData = @json($this->chartData);
-                if (chartData) {
+                const dailyData = @json($this->chartData);
+                if (dailyData && dailyData.labels && dailyData.data) {
                     chartType = 'line';
                     chartData = {
-                        labels: chartData.labels,
+                        labels: dailyData.labels,
                         datasets: [{
                             label: 'Daily Count',
-                            data: chartData.data,
+                            data: dailyData.data,
                             borderColor: 'rgb(59, 130, 246)',
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             borderWidth: 2,
@@ -368,7 +374,7 @@ document.addEventListener('livewire:init', function () {
                             tension: 0.4
                         }, {
                             label: 'Daily Goal',
-                            data: Array(30).fill(chartData.goal),
+                            data: Array(30).fill(dailyData.goal || 0),
                             borderColor: 'rgb(239, 68, 68)',
                             backgroundColor: 'rgba(239, 68, 68, 0.1)',
                             borderWidth: 2,
@@ -380,14 +386,14 @@ document.addEventListener('livewire:init', function () {
                 break;
 
             case 'weekly':
-                chartData = @json($this->weeklyChartData);
-                if (chartData) {
+                const weeklyData = @json($this->weeklyChartData);
+                if (weeklyData && weeklyData.labels && weeklyData.data) {
                     chartType = 'bar';
                     chartData = {
-                        labels: chartData.labels,
+                        labels: weeklyData.labels,
                         datasets: [{
                             label: 'Weekly Total',
-                            data: chartData.data,
+                            data: weeklyData.data,
                             backgroundColor: 'rgba(16, 185, 129, 0.8)',
                             borderColor: 'rgb(16, 185, 129)',
                             borderWidth: 1
@@ -397,14 +403,14 @@ document.addEventListener('livewire:init', function () {
                 break;
 
             case 'time-of-day':
-                chartData = @json($this->timeOfDayChartData);
-                if (chartData) {
+                const timeData = @json($this->timeOfDayChartData);
+                if (timeData && timeData.labels && timeData.data) {
                     chartType = 'bar';
                     chartData = {
-                        labels: chartData.labels,
+                        labels: timeData.labels,
                         datasets: [{
                             label: 'Tasks Completed',
-                            data: chartData.data,
+                            data: timeData.data,
                             backgroundColor: 'rgba(168, 85, 247, 0.8)',
                             borderColor: 'rgb(168, 85, 247)',
                             borderWidth: 1
@@ -420,6 +426,19 @@ document.addEventListener('livewire:init', function () {
                 data: chartData,
                 options: chartConfig
             });
+            // Hide no data message
+            const noDataMessage = document.getElementById('noDataMessage');
+            if (noDataMessage) {
+                noDataMessage.classList.add('hidden');
+                noDataMessage.classList.remove('flex');
+            }
+        } else {
+            // Show no data message
+            const noDataMessage = document.getElementById('noDataMessage');
+            if (noDataMessage) {
+                noDataMessage.classList.remove('hidden');
+                noDataMessage.classList.add('flex');
+            }
         }
     }
 
